@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab选项卡</title>
+    <link rel="stylesheet" href="daohang.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            margin-top: 50px;
+            padding: 16px;
+            border-radius: 4px;
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, .3);
+        }
+        
+        .tabs .tab-header {
+            position: relative;
+            display: flex;
+            font-size: 13px;
+            color: #303030;
+            /* 2??? */
+            /* line-height: 2; */
+            line-height: 30px;
+            font-weight: 500;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tabs .tab-item {
+            margin-right: 30px;
+            cursor: pointer;
+        }
+        
+        .tabs .tab-item.active {
+            color: #409eff;
+        }
+        
+        .tabs .line {
+            /* 覆盖  绝对定位 */
+            position: absolute;
+            top: 100%;
+            transform: translateX(0);
+            width: 50px;
+            height: 2px;
+            background: #409eff;
+            transition: all .2s;
+        }
+        
+        .tab-content .tab-panel {
+            padding: 16px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .tab-content .tab-panel.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <div class="header">
+        <img src="./下载.svg">
+        <ul>
+            <li><a href="tooltip.html">Tooltip</a></li>
+            <li><a href="message.html">Message</a></li>
+            <li><a href="tab.html">Tab</a></li>
+            <li><a href="collapse.html">Collapse</a></li>
+            <li><a href="carousel.html">Carousel</a></li>
+            <li><a href="dialog.html">Dialog</a></li>
+        </ul>
+    </div>
+    <div class="wrap">
+        <h1>Tabs 标签页</h1>
+        <p>分隔内容上有关联但属于不同类别的数据集合。</p>
+    </div>
+    <div class="container">
+        <h2>Tab选项卡1</h2>
+        <div class="tabs">
+            <div class="tab-header">
+                <span class="tab-item active">用户管理</span>
+                <span class="tab-item">配置管理</span>
+                <span class="tab-item">角色管理</span>
+                <span class="tab-item">定时任务补偿</span>
+                <span class="line"></span>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-panel active">用户管理</div>
+                <div class="tab-panel">配置管理</div>
+                <div class="tab-panel">角色管</div>
+                <div class="tab-panel">定时任务补偿</div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="wrap">
+        <h1>基础用法</h1>
+        <p>基础的、简洁的标签页。</p>
+    </div>
+    <div class="container">
+        <h2>Tab选项卡2</h2>
+        <div class="tabs">
+            <div class="tab-header">
+                <span class="tab-item active">用户管理</span>
+                <span class="tab-item">配置管理</span>
+                <span class="tab-item">角色管理</span>
+                <span class="tab-item">定时任务补偿</span>
+                <span class="line"></span>
+
+            </div>
+            <div class="tab-content">
+                <div class="tab-panel active">用户管理</div>
+                <div class="tab-panel">配置管理</div>
+                <div class="tab-panel">角色管</div>
+                <div class="tab-panel">定时任务补偿</div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const $ = s => document.querySelector(s)
+        const $$ = s => document.querySelectorAll(s)
+
+
+        const $$tabItems = $$('.tabs .tab-item')
+        const $$tabPanel = $$('.tabs .tab-panel')
+
+        const $line = $('.tabs .line')
+
+        class Tabs {
+            constructor($container) {
+                this.$container = $container
+                this.$$tabItems = $container.querySelectorAll('.tab-item')
+                this.$$tabPanels = $container.querySelectorAll('.tab-panel')
+                this.$line = $container.querySelector('.line')
+
+                this.init()
+                this.bind()
+            }
+            init() {
+                this.$line.style.width = this.$$tabItems[0].offsetWidth + 'px'
+            }
+            bind() {
+                let self = this
+                this.$$tabItems.forEach($tab => {
+                    $tab.onclick = function() {
+                        self.$$tabItems.forEach($tab => $tab.classList.remove('active'))
+                        this.classList.add('active')
+
+                        self.$line.style.width = this.offsetWidth + 'px'
+
+                        self.$line.style.transform = `translateX(${this.offsetLeft}px)`
+
+                        //this就是我们点的dom对象
+                        let index = [...self.$$tabItems].indexOf(this)
+                        self.$$tabPanels.forEach($panel => $panel.classList.remove('active'))
+                        self.$$tabPanels[index].classList.add('active')
+                    }
+                });
+            }
+        }
+
+        document.querySelectorAll('.tabs').forEach($container => new Tabs($container))
+
+        // new Tabs(document.querySelectorAll('.tabs')[0])
+        // new Tabs(document.querySelectorAll('.tabs')[1])
+    </script>
+</body>
+
+</html>

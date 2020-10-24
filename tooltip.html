@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原生UI组件</title>
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_2002451_p7vve7vm9a.css">
+    <link rel="stylesheet" href="daohang.css">
+    <style>
+        .container {
+            max-width: 800px;
+            padding: 16px;
+            margin: 30px auto;
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, .3);
+            border-radius: 4px;
+        }
+        
+        .button {
+            /* 子绝父相 */
+            position: relative;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #303030;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        .button:hover {
+            border-color: #FF8C00;
+            color: #FF8C00;
+        }
+        
+        .tooltip {
+            position: absolute;
+            z-index: 10;
+            display: none;
+            color: #fff;
+            background-color: #000;
+            /* 不折行 */
+            white-space: nowrap;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .tooltip.show {
+            display: block;
+        }
+        
+        .tooltip::after {
+            content: '';
+            width: 0;
+            height: 0;
+            /* 本身有块级的特性 */
+            position: absolute;
+            border: 5px solid transparent;
+        }
+        
+        .tooltip.top {
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .tooltip.top::after {
+            border-top-color: #000;
+            transform: translateX(-50%);
+            left: 50%;
+            top: 100%;
+        }
+        
+        .tooltip.bottom {
+            /* top: calc(100%+10px); */
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .tooltip.bottom::after {
+            border-bottom-color: #303030;
+            transform: translateX(-50%);
+            bottom: 100%;
+            left: 50%;
+        }
+        
+        .tooltip.left {
+            right: 100%;
+            /* right: calc(100%+10px); */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .tooltip.left::after {
+            border-left-color: #303030;
+            transform: translateY(-50%);
+            top: 50%;
+            right: -11px;
+        }
+        
+        .tooltip.right {
+            left: 100%;
+            /* left: calc(100%+10px); */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .tooltip.right::after {
+            border-right-color: #303030;
+            transform: translateY(-50%);
+            top: 50%;
+            left: -11px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <div class="header">
+        <img src="./下载.svg">
+        <ul>
+            <li><a href="tooltip.html">Tooltip</a></li>
+            <li><a href="message.html">Message</a></li>
+            <li><a href="tab.html">Tab</a></li>
+            <li><a href="collapse.html">Collapse</a></li>
+            <li><a href="carousel.html">Carousel</a></li>
+            <li><a href="dialog.html">Dialog</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2>Tooltip</h2>
+        <div class="btn-group">
+            <button class="button" data-name="tooltip" data-align="top" data-text="我上提示内容">上</button>
+            <button class="button" data-name="tooltip" data-align="bottom" data-text="我下提示内容">下</button>
+            <button class="button" data-name="tooltip" data-align="left" data-text="我左提示内容">左</button>
+            <button class="button" data-name="tooltip" data-align="right" data-text="我右提示内容">右</button>
+            <button class="button">下</button>
+        </div>
+    </div>
+    <div class="wrap">
+        <h1>Tooltip 文字提示</h1>
+        <p>常用于展示鼠标 hover 时的提示信息。</p>
+    </div>
+    <div class="wrap">
+        <h1>基础用法</h1>
+        <p>在这里我们提供 5 种不同方向的展示方式，可以通过以上完整示例来理解，选择你要的效果。</p>
+    </div>
+    <script>
+        class Tooltip {
+            //constructor表示这个元素本身
+            constructor($root) {
+                this.$root = $root
+                    //代表这个组件
+                this.$root.tooltip = this
+                    // dataset是一个对象   得到位置
+                this.align = $root.dataset.align
+                    //得带文本
+                this.text = $root.dataset.text
+
+                //创造对应的节点
+                this.render()
+                    //?????
+                this.setRoot()
+                this.show()
+            }
+
+            //render创建节点
+            render() {
+                //$tooltip是创建的dom对象
+                let $tooltip = document.createElement('div')
+                $tooltip.classList.add('tooltip')
+                $tooltip.classList.add(this.align)
+                $tooltip.innerText = this.text
+                this.$tooltip = $tooltip // ?this.$tooltip代表dom对象    $tooltip代表组件
+                this.$root.appendChild($tooltip)
+            }
+            setRoot() {
+                // let self = this
+                // this.$root.showTooltip = function() {
+                //     self.show()
+                // }
+                this.$root.showTooltip = this.show.bind(this)
+                this.$root.hideTooltip = this.hide.bind(this)
+            }
+            show() {
+                this.$tooltip.classList.add('show')
+            }
+            hide() {
+                this.$tooltip.classList.remove('show')
+            }
+        }
+        document.querySelectorAll('[data-name="tooltip"]').forEach($node => {
+            $node.onmouseenter = function() {
+                // 如果有tooltip就展示 没有就创建tooltip
+                if ($node.tooltip) {
+                    $node.showTooltip()
+                } else {
+                    new Tooltip(this)
+                }
+            }
+            $node.onmouseleave = function() {
+                $node.hideTooltip()
+            }
+        })
+    </script>
+
+</body>
+
+</html>

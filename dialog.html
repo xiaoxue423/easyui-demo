@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog对话框</title>
+    <link rel="stylesheet" href="daohang.css">
+    <style>
+        .container {
+            max-width: 800px;
+            /* 水平居中 */
+            margin: 30px auto;
+            padding: 16px;
+            border-radius: 4px;
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, .3);
+        }
+        
+        .button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #303030;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .button:hover {
+            border-color: #FF8C00;
+            color: #FF8C00;
+        }
+        
+        .button.primary {
+            border: 0;
+            background-color: lightblue;
+            color: #fff;
+        }
+        
+        .dialog {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, .3);
+            display: none;
+            opacity: 0;
+            transition: all .3s;
+        }
+        
+        .dialog.show {
+            display: block;
+        }
+        
+        .dialog.appear {
+            opacity: 1;
+        }
+        
+        .dialog .main {
+            width: 60%;
+            margin: 30px auto;
+            padding: 16px;
+            background-color: #fff;
+            border-radius: 6px;
+            /* 加一个阴影 模糊半径是4px*/
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, .3);
+            /* 隐藏 让他看不见*/
+            transform: translateY(-100%);
+            opacity: 0;
+            /* 过渡 */
+            transition: all .3s;
+        }
+        
+        .dialog.appear .main {
+            transform: translateY(40px);
+            opacity: 1;
+        }
+        
+        .dialog .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .dialog .header .close {
+            display: flex;
+            /* 靠右 */
+            margin-left: auto;
+            justify-content: center;
+            align-items: center;
+            outline: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .dialog .header .close::after,
+        .dialog .header .close::before {
+            content: '';
+            position: absolute;
+            display: block;
+            width: 6px;
+            height: 1px;
+            background-color: #333;
+            transform: rotate(45deg);
+        }
+        
+        .dialog .header .close::after {
+            transform: rotate(-45deg);
+        }
+        
+        .dialog .footer {
+            display: flex;
+            /* 取消确定两个按钮靠右 */
+            justify-content: flex-end;
+        }
+        
+        .dialog .footer .button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <div class="header">
+        <img src="./下载.svg">
+        <ul>
+            <li><a href="tooltip.html">Tooltip</a></li>
+            <li><a href="message.html">Message</a></li>
+            <li><a href="tab.html">Tab</a></li>
+            <li><a href="collapse.html">Collapse</a></li>
+            <li><a href="carousel.html">Carousel</a></li>
+            <li><a href="dialog.html">Dialog</a></li>
+        </ul>
+    </div>
+    <div class="wrap">
+        <h1>Dialog 对话框</h1>
+        <p>在保留当前页面状态的情况下，告知用户并承载相关操作。</p>
+    </div>
+    <div class="wrap">
+        <h1>基础用法</h1>
+        <p>Dialog 弹出一个对话框，适合需要定制性更大的场景。</p>
+    </div>
+    <div class="container">
+        <h2>Dialog</h2>
+        <button class="button open-dialog">打开弹窗</button>
+        <div class="dialog">
+            <div class="main">
+                <div class="header">提示
+                    <button class="close">
+                    </button>
+                </div>
+                <div class="content">
+                    <p>这是一段消息</p>
+                </div>
+                <div class="footer">
+                    <button class="buttton btn-cancel">取消</button>
+                    <button class="button primary btn-ok">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        class Dialog {
+            // 传递一个容器进去
+            constructor($root, options = {}) {
+                this.$root = $root
+                this.options = options
+                    // ?????
+                this.onCancel = options.onCancel || function() {}
+                    //如果不存在的话传递一个空函数
+                this.onOk = options.onOK || function() {}
+                this.bind()
+            }
+            bind() {
+                let self = this
+                this.$root.querySelector('.close').onclick = function() {
+                    self.hide()
+                    self.onCancel()
+                }
+                this.$root.querySelector('.btn-cancel').onclick = function() {
+                    self.hide()
+                    self.onCancel()
+                }
+                this.$root.querySelector('.btn-ok').onclick = function() {
+                    self.hide()
+                    self.onOk()
+                }
+            }
+            show() {
+                // 添加删除类
+                this.$root.classList.add('show')
+                setTimeout(() => this.$root.classList.add('appear'))
+
+            }
+            hide() {
+                this.$root.classList.remove('appear')
+                setTimeout(() => this.$root.classList.add('show'))
+            }
+        }
+
+        // 先创建弹窗
+        let dialog = new Dialog(document.querySelector('.dialog', {
+            onOk() {
+                console.log('用户点了ok');
+            },
+            onCancel() {
+                console.log('用户点了取消');
+            }
+        }))
+        document.querySelector('.open-dialog').onclick = function() {
+            dialog.show()
+        }
+    </script>
+
+</body>
+
+</html>

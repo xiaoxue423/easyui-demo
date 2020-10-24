@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>结合设计模式实现不同效果的轮播</title>
+    <link rel="stylesheet" href="daohang.css">
+    <style>
+        /* 左右切页 涉及到两个页面 */
+        
+        .container {
+            max-width: 800px;
+            /* 水平居中 */
+            margin: 30px auto;
+            padding: 16px;
+            border-radius: 4px;
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, .3);
+        }
+        
+        .carousel {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .carousel .panels>a {
+            /* 几个a覆盖到一起 */
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-decoration: none;
+            z-index: 1;
+            transition: all .3s;
+        }
+        
+        .carousel .panels>a.active {
+            z-index: 10;
+        }
+        
+        .carousel .panels>a:nth-child(even) {
+            background-color: pink;
+        }
+        
+        .carousel .panels>a:nth-child(odd) {
+            background-color: limegreen;
+        }
+        
+        .carousel .arrow {
+            position: absolute;
+            top: 50%;
+            display: flex;
+            justify-content: center;
+            align-self: center;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(31, 45, 61, .11);
+            border-radius: 50%;
+            border: none;
+            /* 去掉按钮的边框 */
+            outline: none;
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0;
+            transition: all .3s;
+        }
+        
+        .carousel .arrow-pre {
+            left: 10px;
+            transform: translateX(-100%) translateY(-50%);
+        }
+        
+        .carousel:hover .arrow-pre {
+            /* 归位 */
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .carousel .arrow-next {
+            right: 10px;
+            /* translateY(-50%) 向上偏移自己的一半 */
+            transform: translateX(100%) translateY(-50%);
+        }
+        
+        .carousel:hover .arrow-next {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .carousel .arrow::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 6px;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            transform: rotate(-45deg);
+        }
+        
+        .carousel .arrow.arrow-next::before {
+            transform: rotate(135deg);
+        }
+        
+        .carousel .indicators {
+            position: absolute;
+            /* 水平居中 */
+            left: 50%;
+            transform: translateX(-50%);
+            /* width: 100px;
+            height: 10px;*/
+            /* background-color: red; */
+            bottom: 10px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            z-index: 100;
+        }
+        /* 可点击区域太小 */
+        
+        .carousel .indicators>li {
+            display: inline-block;
+            padding: 5px 0;
+            /* border: 1px solid red; */
+            cursor: pointer;
+        }
+        
+        .carousel .indicators>li::before {
+            content: '';
+            display: block;
+            width: 30px;
+            height: 2px;
+            background-color: #c0c4cc;
+            border-radius: 2px;
+            transition: all .3s;
+        }
+        
+        .carousel .indicators>li.active::before {
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <div class="header">
+        <img src="./下载.svg">
+        <ul>
+            <li><a href="tooltip.html">Tooltip</a></li>
+            <li><a href="message.html">Message</a></li>
+            <li><a href="tab.html">Tab</a></li>
+            <li><a href="collapse.html">Collapse</a></li>
+            <li><a href="carousel.html">Carousel</a></li>
+            <li><a href="dialog.html">Dialog</a></li>
+        </ul>
+    </div>
+    <div class="wrap">
+        <h1>Carousel 走马灯</h1>
+        <p>在有限空间内，循环播放同一类型的图片、文字等内容</p>
+    </div>
+    <div class="wrap">
+        <h1>基础用法</h1>
+        <p>适用广泛的基础用法</p>
+    </div>
+    <div class="container">
+        <h2>Carousel</h2>
+        <div>
+            <select id="animation-select">
+                <option value="slide">slide</option>
+                <option value="fade">fade</option>
+                <option value="zoom">zoom</option>
+            </select>
+        </div>
+        <br>
+        <div class="carousel">
+            <!-- 面板 -->
+            <div class="panels">
+                <a href="#0" class="active">0</a>
+                <a href="#1">1</a>
+                <a href="#2">2</a>
+                <a href="#3">3</a>
+            </div>
+            <div class="arrows">
+                <button class="arrow arrow-pre"></button>
+                <button class="arrow arrow-next"></button>
+            </div>
+            <!-- 指示器 -->
+            <ul class="indicators">
+                <li class="active"></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
+    </div>
+    <div class="wrap">
+        <h1>指示器</h1>
+        <p>可以将指示器的显示位置设置在容器外部</p>
+    </div>
+    <div class="wrap">
+        <h1>切换箭头</h1>
+        <p>可以设置切换箭头的显示时机</p>
+    </div>
+    <script>
+        // 给DOM对象设置样式
+        const css = ($node, cssObj) => Object.assign($node.style, cssObj)
+        const Animation = {
+            // $代表DOM元素
+            slide($from, $to, direction) {
+                // 初始化  归位
+                $from.style = ''
+                $to.style = ''
+                    /*  if (direction === 'left') {
+                         css($from, {
+                             transform: `translateX(0)`
+                         })
+                         css($to, {
+                             transform: `translateX(100%)`
+                         })
+
+                         setTimeout(() => {
+                             css($from, {
+                                 transform: `translateX(-100%)`,
+                                 transition: `all 1s`
+                             })
+                             css($to, {
+                                 transform: `translateX(0)`,
+                                 transition: `all 1s`
+                             })
+                         })
+                     } else if (direction === 'right') {
+                         css($from, {
+                             transform: `translateX(0)`
+                         })
+                         css($to, {
+                             transform: `translateX(-100%)`
+                         })
+
+                         setTimeout(() => {
+                             css($from, {
+                                 transform: `translateX(100%)`,
+                                 transition: `all 1s`
+                             })
+                             css($to, {
+                                 transform: `translateX(0)`,
+                                 transition: `all 1s`
+                             })
+                         })
+                     } */
+
+                css($from, {
+                    transform: `translateX(0)`,
+                    zIndex: 10
+                })
+                css($to, {
+                    transform: `translateX(${direction==='right'?'-':'+'}100%)`,
+                    zIndex: 10
+                })
+
+                setTimeout(() => {
+                    css($from, {
+                        transform: `translateX(${direction==='left'?'-':'+'}100%)`,
+                        transition: `all 1s`
+                    })
+                    css($to, {
+                        transform: `translateX(0)`,
+                        transition: `all 1s`
+                    })
+                })
+            },
+
+            fade($from, $to) {
+                $from.style = ''
+                $to.style = ''
+                css($from, {
+                    opacity: 1,
+                    zIndex: 10
+                })
+                css($to, {
+                    opacity: 0,
+                    zIndex: 10
+                })
+
+                setTimeout(() => {
+                    css($from, {
+                        opacity: 0,
+                        zIndex: 10,
+                        transition: `all .4ss`
+                    })
+                    css($to, {
+                        opacity: 1,
+                        zIndex: 9,
+                        transition: `all .4s`
+                    })
+                })
+                setTimeout(() => {
+                    css($from, {
+                        opacity: 0,
+                        zIndex: 9,
+                        transition: `all .4ss`
+                    })
+                    css($to, {
+                        opacity: 1,
+                        zIndex: 10,
+                        transition: `all .4s`
+                    })
+                }, 400)
+            },
+
+            zoom($from, $to) {
+                $from.style = ''
+                $to.style = ''
+                css($from, {
+                    transform: `scale(1)`,
+                    opacity: 1,
+                    zIndex: 10
+                })
+                css($to, {
+                    transform: `scale(10)`,
+                    opacity: 0,
+                    zIndex: 10
+                })
+
+                setTimeout(() => {
+                    css($from, {
+                        transform: `scale(10)`,
+                        opacity: 0,
+                        zIndex: 10,
+                        transition: `all .4ss`
+                    })
+                    css($to, {
+                        transform: `scale(1)`,
+                        opacity: 1,
+                        zIndex: 9,
+                        transition: `all .4s`
+                    })
+                })
+                setTimeout(() => {
+                    css($from, {
+                        zIndex: 9
+                    })
+                    css($to, {
+                        zIndex: 10
+                    })
+                }, 400)
+
+            }
+        }
+        class Carousel {
+            constructor($root, animation) {
+                this.$root = $root
+                    // 获取元素
+                this.$pre = $root.querySelector('.arrow-pre')
+                this.$next = $root.querySelector('.arrow-next')
+                    // $$indicators是类数组 不能直接用indexof方法
+                this.$$indicators = $root.querySelectorAll('.indicators > li')
+                this.$$panel = $root.querySelectorAll('.panels > a')
+                this.animation = animation
+
+                // 启动绑定事件
+                this.bind()
+            }
+            bind() {
+                    let self = this
+                        // 绑定事件
+                    this.$pre.onclick = function() {
+                        let fromIndex = self.getIndex()
+                        let toIndex = self.getPreIndex()
+                        self.setPage(fromIndex, toIndex, 'right')
+                        self.setIndicators(toIndex)
+                    }
+
+                    this.$next.onclick = function() {
+                        let fromIndex = self.getIndex()
+                        let toIndex = self.getNextIndex()
+                        self.setPage(fromIndex, toIndex, 'left')
+                        self.setIndicators(toIndex)
+                    }
+                    this.$$indicators.forEach($indicators => $indicators.onclick = function(e) {
+                        let fromIndex = self.getIndex()
+                        let toIndex = [...self.$$indicators].indexOf(e.target)
+                        self.setIndicators(toIndex)
+                        let direction = fromIndex < toIndex ? 'left' : 'right'
+                        self.setPage(fromIndex, toIndex, direction)
+                            // console.log(e.target);
+                    });
+                }
+                // 当前是第几页
+            getIndex() {
+                // $$indicators是类数组 不能直接用indexof方法
+                return [...this.$$indicators].indexOf(this.$root.querySelector('.indicators .active'))
+            }
+            getPreIndex() {
+                return (this.getIndex() - 1 + this.$$indicators.length) % this.$$indicators.length
+            }
+            getNextIndex() {
+                return (this.getIndex() + 1) % this.$$indicators.length
+            }
+            setPage(fromIndex, toIndex, direction) {
+                //???
+                this.animation(this.$$panel[fromIndex], this.$$panel[toIndex], direction)
+            }
+            setIndicators(index) {
+                this.$$indicators.forEach($indicators => $indicators.classList.remove('active'))
+                this.$$indicators[index].classList.add('active')
+            }
+            setAnimation(animation) {
+                this.animation = animation
+            }
+        }
+        // const $ = s => document.querySelector(s)
+        // const $$ = ss => document.querySelectorAll(ss)
+        let $carousel = document.querySelector('.carousel')
+            // 组合模式
+        let carousel = new Carousel($carousel, Animation.slide)
+        document.querySelector('#animation-select').onchange = function() {
+            carousel.setAnimation(Animation[this.value])
+        }
+
+
+        // 当点击next 展示 下一页面板 设置indicators
+        // 当点击pre 展示 上一页面板 设置indicators
+        // 当点击indicators 展示第n页面板 设置indicators
+    </script>
+
+</body>
+
+</html>
